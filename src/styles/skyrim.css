@@ -1,0 +1,242 @@
+:root {
+  --bg-color: #1a1a1a;
+  --text-color: #c0c0c0;
+  --accent-color: #cda869;
+  /* Gold/Parchment */
+  --accent-hover: #eecfa1;
+  --panel-bg: rgba(0, 0, 0, 0.7);
+  --border-color: #4a4a4a;
+
+  --font-main: 'Futura', sans-serif;
+  /* Placeholder */
+  --font-hand: 'Courier New', cursive;
+  /* Placeholder for journal text */
+}
+
+@font-face {
+  font-family: 'SkyrimHeader';
+  src: local('Futura Condensed Medium'), local('Futura');
+  /* Ideally we'd load a real font file here */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  background-image: linear-gradient(to bottom, #1a1a1a, #000);
+  color: var(--text-color);
+  font-family: var(--font-main);
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.skyrim-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-image: url('/fog-overlay.png');
+  /* Placeholder */
+  background-size: cover;
+}
+
+/* Left Panel - Quest List */
+.quest-list-panel {
+  width: 30%;
+  min-width: 300px;
+  border-right: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4));
+  padding-top: 40px;
+}
+
+/* Right Panel - Details */
+.quest-detail-panel {
+  flex: 1;
+  padding: 40px 60px;
+  overflow-y: auto;
+  background: radial-gradient(circle at center, rgba(20, 20, 20, 0.8), rgba(0, 0, 0, 0.9));
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  font-family: 'SkyrimHeader', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: normal;
+  margin: 0 0 1rem 0;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: #fff;
+}
+
+h2 {
+  font-size: 1.8rem;
+  color: var(--accent-color);
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+
+h3 {
+  font-size: 1.2rem;
+  color: #aaa;
+}
+
+/* Interactive Elements */
+button {
+  background: transparent;
+  border: 1px solid #555;
+  color: var(--text-color);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+button:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(205, 168, 105, 0.2);
+}
+
+input[type="number"] {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #444;
+  color: #fff;
+  padding: 5px;
+  font-family: var(--font-main);
+  width: 60px;
+  text-align: center;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .skyrim-container {
+    flex-direction: column;
+  }
+
+  .quest-list-panel {
+    width: 100%;
+    height: 100%;
+    border-right: none;
+    display: flex;
+    /* Default visible */
+  }
+
+  .quest-detail-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background: #111;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    padding: 20px 15px !important;
+    /* Уменьшенные отступы для мобильных */
+    box-sizing: border-box;
+  }
+
+  .quest-detail-panel.active {
+    transform: translateX(0);
+  }
+
+  /* Уменьшаем размеры заголовков на мобильных */
+  h1 {
+    font-size: 1.5rem !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  h2 {
+    font-size: 1.2rem !important;
+    word-wrap: break-word;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  /* Обеспечиваем перенос длинных слов */
+  p,
+  span,
+  div,
+  li {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Уменьшаем размер шрифта описания */
+  .quest-detail p {
+    font-size: 0.95rem !important;
+  }
+
+  /* Скрываем панель списка квестов когда открыт детальный вид */
+  .quest-list-panel.hidden-mobile {
+    display: none;
+  }
+
+  /* Кнопка "Назад" */
+  .mobile-back-btn {
+    font-size: 0.9rem;
+    padding: 10px 15px;
+  }
+
+  /* Кнопка завершения квеста */
+  button {
+    font-size: 1rem !important;
+    padding: 12px !important;
+  }
+
+  /* Секции */
+  .objectives-section,
+  .rewards-section,
+  .actions-section {
+    margin-bottom: 20px !important;
+  }
+
+  /* Элементы задач */
+  .objective-item {
+    align-items: flex-start !important;
+  }
+
+  .objective-item span {
+    font-size: 0.9rem;
+  }
+
+  /* Награды */
+  .rewards-section ul {
+    padding-left: 0 !important;
+  }
+
+  .rewards-section li {
+    font-size: 0.9rem;
+    margin-bottom: 8px !important;
+  }
+}
