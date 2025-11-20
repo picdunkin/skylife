@@ -2,7 +2,7 @@
 
 Skyrim-themed personal quest tracker with Firebase integration.
 
-## Features
+## Features!!!
 
 - 🎮 **Skyrim-style UI** - Dark, atmospheric interface with gold accents
 - 🔒 **Progressive Quest System** - Acts unlock sequentially as you complete quests
