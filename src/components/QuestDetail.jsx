@@ -1,5 +1,4 @@
 import React from 'react';
-import { ACTS } from '../data/quests';
 import { useGame } from '../context/GameContext';
 import MetricInput from './MetricInput';
 import { playSound } from '../utils/sounds';
@@ -10,7 +9,7 @@ const QuestDetail = ({ questId, onBack }) => {
     // Find the quest data and its act
     let quest = null;
     let questAct = null;
-    for (const act of ACTS) {
+    for (const act of gameState.acts) {
         const found = act.quests.find(q => q.id === questId);
         if (found) {
             quest = found;

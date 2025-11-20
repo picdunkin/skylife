@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SkyrimLayout from './components/SkyrimLayout';
 import { useGame } from './context/GameContext';
 
 function App() {
   const { user, loading, login } = useGame();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      await login();
+    } catch (error) {
+      // Error already handled in GameContext
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -33,17 +45,25 @@ function App() {
       }}>
         <h1 style={{ fontSize: '4rem', marginBottom: '2rem', textShadow: '0 0 10px #000' }}>SKYLIFE</h1>
         <button
-          onClick={login}
+          onClick={handleLogin}
+          disabled={isLoggingIn}
           style={{
             fontSize: '1.5rem',
             padding: '15px 40px',
             border: '2px solid #cda869',
-            background: 'rgba(0,0,0,0.8)'
+            background: 'rgba(0,0,0,0.8)',
+            opacity: isLoggingIn ? 0.6 : 1,
+            cursor: isLoggingIn ? 'wait' : 'pointer'
           }}
         >
-          НАЧАТЬ НОВУЮ ИГРУ
+          {isLoggingIn ? 'ЗАГРУЗКА...' : 'НАЧАТЬ НОВУЮ ИГРУ'}
         </button>
         <p style={{ marginTop: '20px', color: '#888' }}>(Вход через Google)</p>
+        {isLoggingIn && (
+          <p style={{ marginTop: '10px', color: '#cda869', fontSize: '0.9rem' }}>
+            Откройте всплывающее окно для авторизации...
+          </p>
+        )}
       </div>
     );
   }
