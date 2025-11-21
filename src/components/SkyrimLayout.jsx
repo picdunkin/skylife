@@ -3,20 +3,33 @@ import QuestList from './QuestList';
 import QuestDetail from './QuestDetail';
 import EditActModal from './EditActModal';
 import EditQuestModal from './EditQuestModal';
+import SkillsList from './SkillsList';
+import SkillDetail from './SkillDetail';
+import EditSkillModal from './EditSkillModal';
 import { useGame } from '../context/GameContext';
 
 const SkyrimLayout = () => {
     const [selectedQuestId, setSelectedQuestId] = useState(null);
+    const [selectedSkillId, setSelectedSkillId] = useState(null);
+    const [currentView, setCurrentView] = useState('journal'); // 'journal', 'skills', 'dailies'
     const [editActData, setEditActData] = useState(null); // { actId, mode: 'add'|'edit' }
     const [editQuestData, setEditQuestData] = useState(null); // { actId, questId, mode: 'add'|'edit' }
-    const { gameState, editMode, toggleEditMode, deleteAct, deleteQuest } = useGame();
+    const [editSkillData, setEditSkillData] = useState(null); // { skillId, mode: 'add'|'edit' }
+    const { gameState, editMode, toggleEditMode, deleteAct, deleteQuest, deleteSkill } = useGame();
 
     const handleSelectQuest = (questId) => {
         setSelectedQuestId(questId);
+        setSelectedSkillId(null);
+    };
+
+    const handleSelectSkill = (skillId) => {
+        setSelectedSkillId(skillId);
+        setSelectedQuestId(null);
     };
 
     const handleBack = () => {
         setSelectedQuestId(null);
+        setSelectedSkillId(null);
     };
 
     const handleEditAct = (actId, mode) => {
@@ -35,52 +48,167 @@ const SkyrimLayout = () => {
         }
     };
 
+    const handleEditSkill = (skillId, mode) => {
+        if (mode === 'delete') {
+            deleteSkill(skillId);
+        } else {
+            setEditSkillData({ skillId, mode });
+        }
+    };
+
     return (
         <div className="skyrim-container">
-            <div className={`quest-list-panel ${selectedQuestId ? 'hidden-mobile' : ''}`}>
+            <div className={`quest-list-panel ${selectedQuestId || selectedSkillId ? 'hidden-mobile' : ''}`}>
                 <div style={{
-                    padding: '20px',
-                    textAlign: 'center',
+                    padding: '10px 15px 0 15px',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '15px',
-                    position: 'relative'
+                    flexDirection: 'column',
+                    gap: '10px'
                 }}>
-                    <h1 style={{ fontSize: '1.5rem', color: '#aaa', margin: 0 }}>ЖУРНАЛ</h1>
-                    <button
-                        onClick={toggleEditMode}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '1.2rem',
-                            opacity: editMode ? 1 : 0.4,
-                            transition: 'opacity 0.3s',
-                            padding: '5px'
-                        }}
-                        title={editMode ? 'Выйти из режима редактирования' : 'Войти в режим редактирования'}
-                    >
-                        ✏️
-                    </button>
+                    {/* Money Counter */}
+                    <div style={{
+                        alignSelf: 'flex-end',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        color: '#cda869',
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem',
+                        lineHeight: 1
+                    }}>
+                        <span>{gameState.money || 0}</span>
+                        <span style={{ fontSize: '1.5rem' }}>🪙</span>
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <div className="hide-scrollbar" style={{
+                        display: 'flex',
+                        gap: '15px',
+                        overflowX: 'auto',
+                        whiteSpace: 'nowrap',
+                        paddingBottom: '10px',
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        maskImage: 'linear-gradient(to right, black 90%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to right, black 90%, transparent 100%)'
+                    }}>
+                        <style>
+                            {`
+                                .hide-scrollbar::-webkit-scrollbar { 
+                                    display: none; 
+                                }
+                            `}
+                        </style>
+                        <button
+                            onClick={() => setCurrentView('journal')}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: currentView === 'journal' ? '2px solid #cda869' : '2px solid transparent',
+                                color: currentView === 'journal' ? '#cda869' : '#888',
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                padding: '5px 0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                flexShrink: 0
+                            }}
+                        >
+                            <span className="tab-label">ГЛАВНАЯ</span>
+                        </button>
+                        <button
+                            onClick={() => setCurrentView('skills')}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: currentView === 'skills' ? '2px solid #cda869' : '2px solid transparent',
+                                color: currentView === 'skills' ? '#cda869' : '#888',
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                padding: '5px 0',
+                                flexShrink: 0
+                            }}
+                        >
+                            СКИЛЛЫ
+                        </button>
+                        <button
+                            onClick={() => setCurrentView('dailies')}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: currentView === 'dailies' ? '2px solid #cda869' : '2px solid transparent',
+                                color: currentView === 'dailies' ? '#cda869' : '#888',
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                padding: '5px 0',
+                                flexShrink: 0
+                            }}
+                        >
+                            ДЕЙЛИКИ
+                        </button>
+
+                        {/* Edit Toggle Button */}
+                        <button
+                            onClick={toggleEditMode}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: '2px solid transparent',
+                                color: editMode ? '#cda869' : '#888',
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                padding: '5px 0',
+                                opacity: editMode ? 1 : 0.6,
+                                transition: 'opacity 0.3s',
+                                flexShrink: 0
+                            }}
+                            title={editMode ? 'Выйти из режима редактирования' : 'Войти в режим редактирования'}
+                        >
+                            ✏️
+                        </button>
+                    </div>
                 </div>
-                <QuestList
-                    onSelect={handleSelectQuest}
-                    selectedId={selectedQuestId}
-                    onEditAct={handleEditAct}
-                    onEditQuest={handleEditQuest}
-                />
+
+                {currentView === 'journal' && (
+                    <QuestList
+                        onSelect={handleSelectQuest}
+                        selectedId={selectedQuestId}
+                        onEditAct={handleEditAct}
+                        onEditQuest={handleEditQuest}
+                    />
+                )}
+
+                {currentView === 'skills' && (
+                    <SkillsList
+                        onSelect={handleSelectSkill}
+                        selectedId={selectedSkillId}
+                        onEditSkill={handleEditSkill}
+                    />
+                )}
+
+                {currentView === 'dailies' && (
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+                        <p>Раздел "Дейлики" в разработке...</p>
+                    </div>
+                )}
             </div>
 
-            <div className={`quest-detail-panel ${selectedQuestId ? 'active' : ''}`}>
+            <div className={`quest-detail-panel ${selectedQuestId || selectedSkillId ? 'active' : ''}`}>
                 {selectedQuestId ? (
                     <QuestDetail
                         questId={selectedQuestId}
                         onBack={handleBack}
                     />
+                ) : selectedSkillId ? (
+                    <SkillDetail
+                        skillId={selectedSkillId}
+                        onBack={handleBack}
+                    />
                 ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#555' }}>
-                        <p>Выберите квест для просмотра деталей</p>
+                        <p>Выберите элемент для просмотра деталей</p>
                     </div>
                 )}
             </div>
@@ -99,6 +227,14 @@ const SkyrimLayout = () => {
                     questId={editQuestData.questId}
                     mode={editQuestData.mode}
                     onClose={() => setEditQuestData(null)}
+                />
+            )}
+
+            {editSkillData && (
+                <EditSkillModal
+                    skillId={editSkillData.skillId}
+                    mode={editSkillData.mode}
+                    onClose={() => setEditSkillData(null)}
                 />
             )}
         </div>
