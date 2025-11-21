@@ -15,7 +15,9 @@ const INITIAL_STATE = {
     metrics: {}, // { "m-applications": 5 }
     objectives: {}, // { "obj-remove-ambition": true }
     notes: {},
-    acts: ACTS // Now storing acts in state
+    acts: ACTS, // Now storing acts in state
+    skills: [], // { id, title, targetPerWeek, level, xp, history: [{date, count}] }
+    money: 0 // Septims
 };
 
 export const GameProvider = ({ children }) => {
@@ -240,6 +242,119 @@ export const GameProvider = ({ children }) => {
         });
     };
 
+    // Skills Logic
+    const addSkill = (skill) => {
+        const newSkills = [...(gameState.skills || []), {
+            ...skill,
+            id: `skill-${Date.now()}`,
+            level: 1,
+            xp: 0,
+            history: []
+        }];
+        saveState({ ...gameState, skills: newSkills });
+    };
+
+    const updateSkill = (skillId, updates) => {
+        const newSkills = (gameState.skills || []).map(skill =>
+            skill.id === skillId ? { ...skill, ...updates } : skill
+        );
+        saveState({ ...gameState, skills: newSkills });
+    };
+
+    const deleteSkill = (skillId) => {
+        const newSkills = (gameState.skills || []).filter(skill => skill.id !== skillId);
+        saveState({ ...gameState, skills: newSkills });
+    };
+
+    const checkInSkill = (skillId) => {
+        const skill = (gameState.skills || []).find(s => s.id === skillId);
+        if (!skill) return;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Check if already checked in today
+        // Actually, user might want to check in multiple times? 
+        // "1 чек ин = ..." implies discrete events. 
+        // But usually habits are once a day. 
+        // Let's assume multiple check-ins are allowed if the user wants, 
+        // but for "days of week" tracking we usually care about unique days.
+        // However, the formula relies on "WeeklyCount".
+
+        // Let's calculate Weekly Count based on history in the last 7 days.
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 6); // Last 7 days including today
+
+        const recentCheckIns = (skill.history || []).filter(h => new Date(h.date) >= oneWeekAgo);
+
+        // Count unique days or total check-ins? 
+        // "допустим надо ходить 3 раза из 7 это 100%" -> "1 раз мы даем... 2 раз мы даем..."
+        // This implies count of check-ins in the current week/period.
+        // Let's use total check-ins in the last 7 days (sliding window) or current calendar week?
+        // Usually "per week" means Monday-Sunday.
+        // Let's stick to Monday-Sunday for "Weekly Count".
+
+        const getMonday = (d) => {
+            d = new Date(d);
+            const day = d.getDay(),
+                diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+            return new Date(d.setDate(diff));
+        };
+
+        const monday = getMonday(new Date());
+        monday.setHours(0, 0, 0, 0);
+
+        const thisWeekCheckIns = (skill.history || []).filter(h => new Date(h.date) >= monday);
+        const daysDone = thisWeekCheckIns.length;
+        const target = skill.targetPerWeek || 3;
+
+        // XP Formula
+        // 1 check-in = 100 * LEVEL
+        const baseXP = skill.level * 100;
+
+        let multiplier = 1;
+        if (daysDone > 0) {
+            // 1 check-in * roundup(days_done / days_need_to_be_done * 10)
+            multiplier = Math.ceil((daysDone / target) * 10);
+        }
+
+        const xpGained = baseXP * multiplier;
+
+        // Level Up Logic
+        // XP_TO_LEVEL = ((CURRENT_LEVEL * 1.2) ^ 1.5) * 100
+        let newXP = skill.xp + xpGained;
+        let newLevel = skill.level;
+
+        const xpToNextLevel = (lvl) => Math.floor(Math.pow(lvl * 1.2, 1.5) * 100);
+
+        while (newXP >= xpToNextLevel(newLevel)) {
+            newXP -= xpToNextLevel(newLevel);
+            newLevel++;
+            playSound('levelUp');
+        }
+
+        // Money Reward (Septims)
+        // Let's keep it proportional to multiplier? User didn't specify change for money.
+        // "также даются септимы за чек ин"
+        // Let's keep 10 * multiplier for now.
+        const moneyGained = 10 * multiplier;
+
+        const newHistory = [...(skill.history || []), { date: new Date().toISOString(), xp: xpGained }];
+
+        const newSkills = gameState.skills.map(s =>
+            s.id === skillId ? {
+                ...s,
+                xp: newXP,
+                level: newLevel,
+                history: newHistory
+            } : s
+        );
+
+        const newMoney = (gameState.money || 0) + moneyGained;
+
+        saveState({ ...gameState, skills: newSkills, money: newMoney });
+        playSound('checkbox');
+    };
+
     const value = {
         user,
         gameState,
@@ -258,7 +373,11 @@ export const GameProvider = ({ children }) => {
         deleteAct,
         addQuest,
         updateQuest,
-        deleteQuest
+        deleteQuest,
+        addSkill,
+        updateSkill,
+        deleteSkill,
+        checkInSkill
     };
 
     return (
