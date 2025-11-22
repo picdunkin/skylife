@@ -30,6 +30,17 @@ export const useSkills = (gameState, saveState, playSound) => {
         const skill = (gameState.skills || []).find(s => s.id === skillId);
         if (!skill) return;
 
+        // Check if already checked in today
+        const today = new Date();
+        const isCheckedInToday = (skill.history || []).some(h => {
+            const hDate = new Date(h.date);
+            return hDate.getDate() === today.getDate() &&
+                hDate.getMonth() === today.getMonth() &&
+                hDate.getFullYear() === today.getFullYear();
+        });
+
+        if (isCheckedInToday) return;
+
         const monday = getMonday(new Date());
         monday.setHours(0, 0, 0, 0);
 

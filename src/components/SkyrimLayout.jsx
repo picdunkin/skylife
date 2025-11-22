@@ -6,12 +6,13 @@ import EditQuestModal from './EditQuestModal';
 import SkillsList from './SkillsList';
 import SkillDetail from './SkillDetail';
 import EditSkillModal from './EditSkillModal';
+import SidequestList from './SidequestList';
 import { useGame } from '../context/GameContext';
 
 const SkyrimLayout = () => {
     const [selectedQuestId, setSelectedQuestId] = useState(null);
     const [selectedSkillId, setSelectedSkillId] = useState(null);
-    const [currentView, setCurrentView] = useState('journal'); // 'journal', 'skills', 'dailies'
+    const [currentView, setCurrentView] = useState('journal'); // 'journal', 'skills', 'sidequests'
     const [editActData, setEditActData] = useState(null); // { actId, mode: 'add'|'edit' }
     const [editQuestData, setEditQuestData] = useState(null); // { actId, questId, mode: 'add'|'edit' }
     const [editSkillData, setEditSkillData] = useState(null); // { skillId, mode: 'add'|'edit' }
@@ -134,19 +135,19 @@ const SkyrimLayout = () => {
                             СКИЛЛЫ
                         </button>
                         <button
-                            onClick={() => setCurrentView('dailies')}
+                            onClick={() => setCurrentView('sidequests')}
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                borderBottom: currentView === 'dailies' ? '2px solid #cda869' : '2px solid transparent',
-                                color: currentView === 'dailies' ? '#cda869' : '#888',
+                                borderBottom: currentView === 'sidequests' ? '2px solid #cda869' : '2px solid transparent',
+                                color: currentView === 'sidequests' ? '#cda869' : '#888',
                                 fontSize: '1.1rem',
                                 cursor: 'pointer',
                                 padding: '5px 0',
                                 flexShrink: 0
                             }}
                         >
-                            ДЕЙЛИКИ
+                            САЙДКВЕСТЫ
                         </button>
 
                         {/* Edit Toggle Button */}
@@ -188,10 +189,8 @@ const SkyrimLayout = () => {
                     />
                 )}
 
-                {currentView === 'dailies' && (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
-                        <p>Раздел "Дейлики" в разработке...</p>
-                    </div>
+                {currentView === 'sidequests' && (
+                    <SidequestList />
                 )}
             </div>
 

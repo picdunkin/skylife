@@ -6,6 +6,7 @@ import { playSound } from '../utils/sounds';
 import { useAuth } from '../hooks/useAuth';
 import { useQuests } from '../hooks/useQuests';
 import { useSkills } from '../hooks/useSkills';
+import { useSidequests } from '../hooks/useSidequests';
 import { useNotification } from './NotificationContext';
 
 const GameContext = createContext();
@@ -20,6 +21,7 @@ const INITIAL_STATE = {
     notes: {},
     acts: ACTS, // Now storing acts in state
     skills: [], // { id, title, targetPerWeek, level, xp, history: [{date, count}] }
+    sidequests: [], // { id, title, completed, createdAt }
     money: 0 // Septims
 };
 
@@ -79,6 +81,7 @@ export const GameProvider = ({ children }) => {
     // Hooks for logic
     const questLogic = useQuests(gameState, saveState, playSound);
     const skillLogic = useSkills(gameState, saveState, playSound);
+    const sidequestLogic = useSidequests(gameState, saveState, playSound);
 
     const login = async () => {
         try {
@@ -132,7 +135,8 @@ export const GameProvider = ({ children }) => {
         toggleObjective,
         toggleEditMode,
         ...questLogic,
-        ...skillLogic
+        ...skillLogic,
+        ...sidequestLogic
     }), [user, gameState, loading, editMode, questLogic, skillLogic]);
 
     return (

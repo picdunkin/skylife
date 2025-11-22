@@ -34,6 +34,14 @@ const SkillDetail = ({ skillId, onBack }) => {
 
     const potentialXP = baseXP * nextMultiplier;
 
+    const today = new Date();
+    const isCheckedInToday = (skill.history || []).some(h => {
+        const hDate = new Date(h.date);
+        return hDate.getDate() === today.getDate() &&
+            hDate.getMonth() === today.getMonth() &&
+            hDate.getFullYear() === today.getFullYear();
+    });
+
     // Calendar Widget Logic
     const renderCalendar = () => {
         const today = new Date();
@@ -124,20 +132,23 @@ const SkillDetail = ({ skillId, onBack }) => {
                     </div>
 
                     <button
-                        onClick={() => checkInSkill(skillId)}
+                        onClick={() => !isCheckedInToday && checkInSkill(skillId)}
                         className="action-btn"
+                        disabled={isCheckedInToday}
                         style={{
                             fontSize: '1.5rem',
                             padding: '20px 40px',
                             width: '100%',
-                            background: 'rgba(205, 168, 105, 0.2)',
-                            border: '2px solid #cda869',
-                            color: '#fff',
-                            cursor: 'pointer',
+                            background: isCheckedInToday ? 'rgba(100, 100, 100, 0.2)' : 'rgba(205, 168, 105, 0.2)',
+                            border: isCheckedInToday ? '2px solid #666' : '2px solid #cda869',
+                            color: isCheckedInToday ? '#888' : '#fff',
+                            cursor: isCheckedInToday ? 'not-allowed' : 'pointer',
                             marginBottom: '20px'
                         }}
                     >
-                        ЧЕК ИН <span style={{ fontSize: '1rem', color: '#cda869' }}>+{potentialXP} XP</span>
+                        {isCheckedInToday ? 'УЖЕ ВЫПОЛНЕНО' : (
+                            <>ЧЕК ИН <span style={{ fontSize: '1rem', color: '#cda869' }}>+{potentialXP} XP</span></>
+                        )}
                     </button>
 
                     <div style={{ marginBottom: '20px', fontSize: '1.2rem' }}>
