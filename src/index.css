@@ -83,13 +83,15 @@ body {
 }
 
 /* Layout Classes */
+/* Layout Classes */
 .skyrim-container {
   display: flex;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   background: #000;
   color: #fff;
   overflow: hidden;
+  position: relative;
 }
 
 .quest-list-panel {
@@ -110,7 +112,7 @@ body {
 }
 
 /* Mobile Responsiveness */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .skyrim-container {
     position: relative;
   }
@@ -143,4 +145,120 @@ body {
   .quest-detail-panel.active {
     display: block;
   }
+}
+
+/* QuestList Component Styles */
+.act-group {
+  margin-bottom: 2px;
+}
+
+.act-header {
+  padding: 10px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+}
+
+.act-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.act-header.locked {
+  color: #555;
+  opacity: 0.5;
+}
+
+.act-header.unlocked {
+  color: #cda869;
+  opacity: 1;
+}
+
+.act-controls,
+.quest-controls {
+  display: flex;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.icon-btn:hover {
+  opacity: 1;
+}
+
+.quest-item {
+  padding: 12px 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 4px solid transparent;
+  transition: background 0.2s;
+}
+
+.quest-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.quest-item.selected {
+  color: #fff;
+  background: rgba(205, 168, 105, 0.1);
+  border-left-color: #cda869;
+}
+
+.quest-item.completed {
+  color: #888;
+}
+
+.quest-item.locked {
+  color: #555;
+  opacity: 0.4;
+}
+
+.quest-marker {
+  font-size: 1.2rem;
+  flex: none;
+}
+
+.quest-marker.completed {
+  color: #cda869;
+}
+
+.add-item-button {
+  padding: 12px 30px;
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-style: italic;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.add-item-button:hover {
+  opacity: 1;
+}
+
+.add-act-button {
+  padding: 10px 20px;
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-top: 2px;
+  font-style: italic;
+  opacity: 0.7;
 }

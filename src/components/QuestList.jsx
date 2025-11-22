@@ -21,18 +21,7 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                 return (
                     <div key={act.id} className="act-group">
                         <div
-                            className="act-header"
-                            style={{
-                                padding: '10px 20px',
-                                cursor: 'pointer',
-                                color: actUnlocked ? '#cda869' : '#555',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                background: 'rgba(255,255,255,0.05)',
-                                marginBottom: '2px',
-                                opacity: actUnlocked ? 1 : 0.5
-                            }}
+                            className={`act-header ${actUnlocked ? 'unlocked' : 'locked'}`}
                         >
                             <span onClick={() => toggleAct(act.id)} style={{ flex: 1 }}>
                                 {act.title}
@@ -40,19 +29,13 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                             </span>
 
                             {editMode && (
-                                <div style={{ display: 'flex', gap: '8px', marginRight: '10px' }}>
+                                <div className="act-controls">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onEditAct(act.id, 'edit');
                                         }}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            fontSize: '1rem',
-                                            opacity: 0.7
-                                        }}
+                                        className="icon-btn"
                                         title="Редактировать акт"
                                     >
                                         ✏️
@@ -64,13 +47,7 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                                                 onEditAct(act.id, 'delete');
                                             }
                                         }}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            fontSize: '1rem',
-                                            opacity: 0.7
-                                        }}
+                                        className="icon-btn"
                                         title="Удалить акт"
                                     >
                                         🗑️
@@ -92,28 +69,19 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                                     const completed = isQuestCompleted(quest.id);
                                     const isSelected = selectedId === quest.id;
 
+                                    let itemClass = 'quest-item';
+                                    if (isSelected) itemClass += ' selected';
+                                    if (completed) itemClass += ' completed';
+                                    if (!actUnlocked) itemClass += ' locked';
+
                                     return (
                                         <div
                                             key={quest.id}
-                                            style={{
-                                                padding: '12px 30px',
-                                                cursor: 'pointer',
-                                                color: isSelected ? '#fff' : (completed ? '#888' : (actUnlocked ? '#ccc' : '#555')),
-                                                background: isSelected ? 'rgba(205, 168, 105, 0.1)' : 'transparent',
-                                                borderLeft: isSelected ? '4px solid #cda869' : '4px solid transparent',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                opacity: actUnlocked ? 1 : 0.4
-                                            }}
+                                            className={itemClass}
                                         >
                                             <span
                                                 onClick={() => onSelect(quest.id)}
-                                                style={{
-                                                    color: completed ? '#cda869' : (actUnlocked ? '#444' : '#333'),
-                                                    fontSize: '1.2rem',
-                                                    flex: 'none'
-                                                }}
+                                                className={`quest-marker ${completed ? 'completed' : ''}`}
                                             >
                                                 {completed ? '◆' : '◇'}
                                             </span>
@@ -122,19 +90,13 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                                             </span>
 
                                             {editMode && (
-                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                <div className="quest-controls">
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             onEditQuest(act.id, quest.id, 'edit');
                                                         }}
-                                                        style={{
-                                                            background: 'transparent',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.9rem',
-                                                            opacity: 0.6
-                                                        }}
+                                                        className="icon-btn"
                                                         title="Редактировать квест"
                                                     >
                                                         ✏️
@@ -146,13 +108,7 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                                                                 onEditQuest(act.id, quest.id, 'delete');
                                                             }
                                                         }}
-                                                        style={{
-                                                            background: 'transparent',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.9rem',
-                                                            opacity: 0.6
-                                                        }}
+                                                        className="icon-btn"
                                                         title="Удалить квест"
                                                     >
                                                         🗑️
@@ -166,16 +122,7 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                                 {editMode && (
                                     <div
                                         onClick={() => onEditQuest(act.id, null, 'add')}
-                                        style={{
-                                            padding: '12px 30px',
-                                            cursor: 'pointer',
-                                            color: '#888',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            fontStyle: 'italic',
-                                            opacity: 0.7
-                                        }}
+                                        className="add-item-button"
                                     >
                                         <span style={{ fontSize: '1.2rem' }}>➕</span>
                                         <span>Добавить квест</span>
@@ -187,18 +134,7 @@ const QuestList = ({ onSelect, selectedId, onEditAct, onEditQuest }) => {
                         {editMode && actIndex === gameState.acts.length - 1 && (
                             <div
                                 onClick={() => onEditAct(null, 'add')}
-                                style={{
-                                    padding: '10px 20px',
-                                    cursor: 'pointer',
-                                    color: '#888',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    marginTop: '2px',
-                                    fontStyle: 'italic',
-                                    opacity: 0.7
-                                }}
+                                className="add-act-button"
                             >
                                 <span style={{ fontSize: '1.2rem' }}>➕</span>
                                 <span>Добавить акт</span>
