@@ -19,16 +19,16 @@ export const calculateLevelUp = (currentXp, currentLevel) => {
     let newLevel = currentLevel;
     let leveledUp = false;
 
-    const xpToNextLevel = (lvl) => Math.floor(Math.pow(lvl * 1.2, 1.5) * 100);
-
-    while (newXp >= xpToNextLevel(newLevel)) {
-        newXp -= xpToNextLevel(newLevel);
+    while (newXp >= calculateXpToNextLevel(newLevel)) {
+        newXp -= calculateXpToNextLevel(newLevel);
         newLevel++;
         leveledUp = true;
     }
 
     return { newXp, newLevel, leveledUp };
 };
+
+export const calculateXpToNextLevel = (lvl) => Math.floor(Math.pow(lvl * 1.2, 1.5) * 100);
 
 export const calculateMoneyReward = (multiplier) => {
     return 10 * multiplier;

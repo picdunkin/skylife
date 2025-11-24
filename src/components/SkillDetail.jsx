@@ -1,5 +1,7 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
+import { getMonday } from '../utils/dateUtils';
+import { calculateXpToNextLevel, calculateXpGain } from '../utils/gameRules';
 
 const SkillDetail = ({ skillId, onBack }) => {
     const { gameState, checkInSkill } = useGame();
@@ -7,32 +9,17 @@ const SkillDetail = ({ skillId, onBack }) => {
 
     if (!skill) return null;
 
-    const xpToNextLevel = Math.floor(Math.pow(skill.level * 1.2, 1.5) * 100);
+    const xpToNextLevel = calculateXpToNextLevel(skill.level);
     const progressPercent = Math.min(100, (skill.xp / xpToNextLevel) * 100);
-
-    const getMonday = (d) => {
-        d = new Date(d);
-        const day = d.getDay(),
-            diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    };
 
     const monday = getMonday(new Date());
     monday.setHours(0, 0, 0, 0);
     const thisWeekCheckIns = (skill.history || []).filter(h => new Date(h.date) >= monday);
-    const weeklyCount = thisWeekCheckIns.length;
+    const uniqueDays = new Set(thisWeekCheckIns.map(h => new Date(h.date).toDateString())).size;
+    const weeklyCount = uniqueDays;
 
     // Calculate potential XP for next check-in
-    const daysDone = weeklyCount;
-    const target = skill.targetPerWeek || 3;
-    const baseXP = skill.level * 100;
-
-    let nextMultiplier = 1;
-    if (daysDone > 0) {
-        nextMultiplier = Math.ceil((daysDone / target) * 10);
-    }
-
-    const potentialXP = baseXP * nextMultiplier;
+    const { xpGained: potentialXP, multiplier: nextMultiplier } = calculateXpGain(skill, weeklyCount);
 
     const today = new Date();
     const isCheckedInToday = (skill.history || []).some(h => {

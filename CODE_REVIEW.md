@@ -1,86 +1,51 @@
-# Code Review Report: Skylife
+# Code Review Report: Skylife (Updated)
 
-## 1. Architecture & State Management (`GameContext.jsx`)
+## 1. Architecture & Improvements
+**Status: Excellent Progress**
+- **Context Split**: You have successfully refactored `GameContext` by extracting logic into `useSkills`, `useQuests`, and `useSidequests`. This makes the context much cleaner and easier to maintain.
+- **Memoization**: The `value` in `GameContext` is now correctly wrapped in `useMemo`, preventing unnecessary re-renders.
+- **Notification**: You replaced `alert()` with `showNotification`, improving the user experience significantly.
 
-### **Critical: Performance Issue with Context Value**
-**Observation:** The `value` object passed to `GameContext.Provider` is created on every single render.
-```javascript
-// Current
-const value = { user, gameState, ... }; 
+## 2. Code Duplication (DRY Principle)
+**Observation:** There is some logic duplication that should be cleaned up to avoid inconsistencies.
 
-// Problem
-// This causes ALL consumers of useGame() to re-render whenever GameContext re-renders, 
-// even if the specific data they use hasn't changed.
-```
-**Recommendation:** Wrap the value in `useMemo`.
-```javascript
-const value = useMemo(() => ({
-    user, gameState, ...
-}), [user, gameState, loading, editMode]);
-```
+- **XP Calculation**:
+  - `src/utils/gameRules.js` contains the source of truth for `xpToNextLevel`.
+  - `src/components/SkillDetail.jsx` re-implements the same formula manually: `Math.floor(Math.pow(skill.level * 1.2, 1.5) * 100)`.
+  - **Recommendation**: Export `xpToNextLevel` from `gameRules.js` and use it in `SkillDetail.jsx`.
 
-### **God Object Pattern**
-**Observation:** `GameContext` is handling Auth, Firestore Sync, Quest Logic, Skill Logic, and Sound effects. It is becoming too large (389 lines).
-**Recommendation:** Split the context or extract logic into custom hooks:
-- `useAuth()` for user/login/logout.
-- `useQuests()` for quest/act CRUD.
-- `useSkills()` for skill logic.
-- `useFirestoreSync()` for the sync effect.
+- **Date Utilities**:
+  - `src/utils/dateUtils.js` likely contains `getMonday`.
+  - `src/components/SkillDetail.jsx` re-defines `getMonday` locally.
+  - **Recommendation**: Import `getMonday` from `../utils/dateUtils` in `SkillDetail.jsx`.
 
-### **Business Logic in Components**
-**Observation:** Complex date logic (finding Monday, calculating XP) is inside `checkInSkill` within the context.
-**Recommendation:** Move date calculations to `src/utils/dateUtils.js` and XP formulas to `src/utils/gameRules.js`. This makes them unit-testable.
+## 3. Logic & Edge Cases
+**Observation:** The `daysDone` calculation in `useSkills.js` might be inaccurate with legacy data.
 
-## 2. Styling & CSS
+- **Current Logic**: `const daysDone = thisWeekCheckIns.length;`
+- **Issue**: If, historically, a user managed to check in twice in one day (before we added the "once per day" check), `daysDone` would count both, potentially inflating the multiplier.
+- **Recommendation**: Filter `thisWeekCheckIns` to count *unique days* only.
+  ```javascript
+  const uniqueDays = new Set(thisWeekCheckIns.map(h => new Date(h.date).toDateString())).size;
+  ```
 
-### **Heavy Use of Inline Styles**
-**Observation:** Components like `QuestList.jsx` and `SkyrimLayout.jsx` rely heavily on inline styles (e.g., `style={{ padding: '10px 15px...' }}`).
-**Drawbacks:**
-- Hard to read and maintain.
-- No support for media queries or pseudo-classes (:hover) without complex JS logic.
-- Performance overhead (JS object creation).
-**Recommendation:** Move these styles to `index.css` or use CSS Modules (`QuestList.module.css`).
-- Example: Replace the massive `style={{...}}` in `QuestList` with `className="act-header"`.
+## 4. Styling
+**Observation:** Heavy use of inline styles persists, particularly in `SkillDetail.jsx`.
+- **Issue**: Inline styles (e.g., `style={{ border: '1px solid #555'... }}`) make the JSX hard to read and are less performant than classes.
+- **Recommendation**: Continue moving these to `index.css` or a CSS module. For example, the "calendar-day" styles are already in a `<style jsx>` block, which is a step in the right direction, but consistency is key.
 
-### **Responsive Design Logic**
-**Observation:** `SkyrimLayout.jsx` uses JS state (`hidden-mobile`) to toggle classes.
-**Recommendation:** This is actually a good approach for this specific "split-pane" mobile layout, but the CSS implementation in `index.css` could be cleaner using CSS Grid for the desktop layout instead of flexbox with fixed widths.
+## 5. Performance
+- **State Updates**: `saveState` updates the entire `gameState` object. While fine for now, as the app grows, you might want to split `gameState` into separate contexts (e.g., `QuestContext`, `SkillContext`) to avoid re-rendering the Quest list when updating a Skill.
 
-## 3. Data Persistence
-
-### **Frequent Writes**
-**Observation:** `saveState` writes to Firestore on *every* state change.
-```javascript
-saveState({ ...gameState, metrics: newMetrics });
-```
-**Risk:** Rapid updates (e.g., dragging a slider or quickly checking boxes) could hit Firestore rate limits or cause UI stutter.
-**Recommendation:** Implement debouncing for metrics or frequent updates, or use "Optimistic UI" updates (update local state immediately, sync to server in background).
-
-## 4. Code Quality & Best Practices
-
-### **Error Handling**
-**Observation:** The `login` function uses `alert()` for errors.
-```javascript
-alert('Вы закрыли окно авторизации...');
-```
-**Recommendation:** Use a non-blocking UI notification (Toast/Snackbar) to maintain the immersive Skyrim aesthetic. Native browser alerts break immersion.
-
-### **Hardcoded Strings**
-**Observation:** Strings like "ГЛАВНАЯ", "СКИЛЛЫ" are hardcoded.
-**Recommendation:** Move to a constants file or a translation file (`src/data/strings.js`) to make it easier to change text globally.
-
-### **Audio Object Creation**
-**Observation:** `sounds.js` creates `new Audio()` instances at the module level.
-**Recommendation:** This is generally fine for small apps, but browsers often block autoplay or audio context creation until user interaction. Ensure `playSound` handles the `NotAllowedError` gracefully (it currently catches errors, which is good).
-
-## 5. Security
-
-**Observation:** Firebase config uses `import.meta.env`, which is correct.
-**Observation:** Firestore rules are not visible here, but ensure you have rules that restrict `users/{userId}` write access to `request.auth.uid == userId`.
+## 6. Security
+- **Firestore**: Ensure your Firestore security rules allow users to only read/write their own document (`users/{userId}`).
+  ```
+  match /users/{userId} {
+    allow read, write: if request.auth != null && request.auth.uid == userId;
+  }
+  ```
 
 ## Summary of Action Items
-
-1.  **Refactor**: Wrap `GameContext` value in `useMemo`.
-2.  **Refactor**: Extract inline styles in `QuestList.jsx` to CSS classes.
-3.  **Feature**: Replace `alert()` with a custom "Skyrim-style" notification.
-4.  **Cleanup**: Move date/XP logic out of `GameContext`.
+1.  **Refactor**: Import `xpToNextLevel` and `getMonday` in `SkillDetail.jsx` instead of redefining them.
+2.  **Fix**: Update `daysDone` calculation in `useSkills.js` to count unique days.
+3.  **Cleanup**: Move inline styles from `SkillDetail.jsx` to CSS classes.

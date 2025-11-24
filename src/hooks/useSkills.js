@@ -45,7 +45,8 @@ export const useSkills = (gameState, saveState, playSound) => {
         monday.setHours(0, 0, 0, 0);
 
         const thisWeekCheckIns = (skill.history || []).filter(h => new Date(h.date) >= monday);
-        const daysDone = thisWeekCheckIns.length; // This is actually check-ins count, not unique days, but keeping logic consistent with previous
+        const uniqueDays = new Set(thisWeekCheckIns.map(h => new Date(h.date).toDateString())).size;
+        const daysDone = uniqueDays;
 
         // Calculate XP
         const { xpGained, multiplier } = calculateXpGain(skill, daysDone);
