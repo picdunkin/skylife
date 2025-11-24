@@ -33,7 +33,7 @@ const SidequestList = () => {
                             color: '#fff',
                             padding: '8px 12px',
                             fontFamily: 'inherit',
-                            fontSize: '1rem'
+                            fontSize: '1.2rem'
                         }}
                     />
                     <button
@@ -45,6 +45,7 @@ const SidequestList = () => {
                             color: '#cda869',
                             padding: '8px 15px',
                             cursor: 'pointer',
+                            fontSize: '1.1rem',
                             opacity: newQuestTitle.trim() ? 1 : 0.5
                         }}
                     >

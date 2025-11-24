@@ -1,14 +1,48 @@
-export const useQuests = (gameState, saveState, playSound) => {
+import { calculateGlobalReward, calculateLevelUp } from '../utils/gameRules';
 
-    const completeQuest = (questId) => {
+export const useQuests = (gameState, saveState, playSound, triggerFloatingText) => {
+
+    const completeQuest = (questId, event) => {
         if (gameState.completedQuestIds.includes(questId)) return;
 
         const newCompleted = [...gameState.completedQuestIds, questId];
 
+        let newGlobalXp = gameState.globalXP || 0;
+        let newGlobalLevel = gameState.globalLevel || 1;
+        let newMoney = gameState.money || 0;
+
+        // Calculate Reward
+        const { xp, money } = calculateGlobalReward('QUEST');
+
+        // Calculate Level Up
+        const { newXp, newLevel, leveledUp } = calculateLevelUp(newGlobalXp + xp, newGlobalLevel);
+
+        if (leveledUp) {
+            playSound('levelUp');
+        } else {
+            playSound('questDone'); // Original sound if no level up
+        }
+
+        newGlobalXp = newXp;
+        newGlobalLevel = newLevel;
+        newMoney += money;
+
+        if (event && triggerFloatingText) {
+            triggerFloatingText(event.clientX, event.clientY, `+${xp} XP`, '#4caf50');
+            setTimeout(() => {
+                triggerFloatingText(event.clientX, event.clientY - 30, `+${money} 🪙`, '#cda869');
+            }, 200);
+        }
+
         // Logic for unlocking acts could go here or be derived
 
-        saveState({ ...gameState, completedQuestIds: newCompleted });
-        playSound('questDone');
+        saveState({
+            ...gameState,
+            completedQuestIds: newCompleted,
+            globalXP: newGlobalXp,
+            globalLevel: newGlobalLevel,
+            money: newMoney
+        });
     };
 
     const unlockAct = (actId) => {

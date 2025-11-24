@@ -1,3 +1,22 @@
+export const BASE_XP = 100;
+export const BASE_MONEY = 10;
+
+export const REWARD_TYPES = {
+    METRIC: { xpMultiplier: 1, moneyMultiplier: 1 },
+    CHECKBOX: { xpMultiplier: 2.5, moneyMultiplier: 1 },
+    QUEST: { xpMultiplier: 10, moneyMultiplier: 10 }, // Sidequests and Main Quests
+};
+
+export const calculateGlobalReward = (type) => {
+    const reward = REWARD_TYPES[type];
+    if (!reward) return { xp: 0, money: 0 };
+
+    return {
+        xp: Math.floor(BASE_XP * reward.xpMultiplier),
+        money: Math.floor(BASE_MONEY * reward.moneyMultiplier)
+    };
+};
+
 export const calculateXpGain = (skill, daysDone) => {
     const target = skill.targetPerWeek || 3;
     const baseXP = skill.level * 100;

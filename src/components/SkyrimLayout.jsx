@@ -8,6 +8,7 @@ import SkillDetail from './SkillDetail';
 import EditSkillModal from './EditSkillModal';
 import SidequestList from './SidequestList';
 import { useGame } from '../context/GameContext';
+import { calculateXpToNextLevel } from '../utils/gameRules';
 
 const SkyrimLayout = () => {
     const [selectedQuestId, setSelectedQuestId] = useState(null);
@@ -61,25 +62,69 @@ const SkyrimLayout = () => {
         <div className="skyrim-container">
             <div className={`quest-list-panel ${selectedQuestId || selectedSkillId ? 'hidden-mobile' : ''}`}>
                 <div style={{
-                    padding: '10px 15px 0 15px',
+                    padding: '8px 15px 0 15px',
                     borderBottom: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px'
+                    gap: '8px'
                 }}>
-                    {/* Money Counter */}
+                    {/* Level/XP and Money Row */}
                     <div style={{
-                        alignSelf: 'flex-end',
                         display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
-                        gap: '5px',
-                        color: '#cda869',
-                        fontWeight: 'bold',
-                        fontSize: '1.2rem',
-                        lineHeight: 1
+                        gap: '10px'
                     }}>
-                        <span>{gameState.money || 0}</span>
-                        <span style={{ fontSize: '1.5rem' }}>🪙</span>
+                        {/* Level & XP Progress */}
+                        <div style={{
+                            width: '50%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                            paddingBottom: '1rem'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                color: '#8a8a8aff',
+                                fontWeight: 'bold',
+                                fontSize: '0.95rem',
+                            }}>
+                                <span>Уровень {gameState.globalLevel || 1}</span>
+                                <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+                                    {gameState.globalXP || 0} / {calculateXpToNextLevel(gameState.globalLevel || 1)}
+                                </span>
+                            </div>
+                            <div style={{
+                                width: '100%',
+                                height: '6px',
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                border: '1px solid #555',
+                                borderRadius: '3px',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{
+                                    width: `${Math.min(100, ((gameState.globalXP || 0) / calculateXpToNextLevel(gameState.globalLevel || 1)) * 100)}%`,
+                                    height: '100%',
+                                    backgroundColor: '#b8b8b8ff',
+                                    transition: 'width 0.5s ease-out'
+                                }} />
+                            </div>
+                        </div>
+
+                        {/* Money Counter */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            color: '#cda869',
+                            fontWeight: 'bold',
+                            lineHeight: 1
+                        }}>
+                            <span>{gameState.money || 0}</span>
+                            <span>🪙</span>
+                        </div>
                     </div>
 
                     {/* Navigation Tabs */}
@@ -108,7 +153,7 @@ const SkyrimLayout = () => {
                                 border: 'none',
                                 borderBottom: currentView === 'journal' ? '2px solid #cda869' : '2px solid transparent',
                                 color: currentView === 'journal' ? '#cda869' : '#888',
-                                fontSize: '1.1rem',
+                                fontSize: '1.3rem',
                                 cursor: 'pointer',
                                 padding: '5px 0',
                                 display: 'flex',
@@ -126,7 +171,7 @@ const SkyrimLayout = () => {
                                 border: 'none',
                                 borderBottom: currentView === 'skills' ? '2px solid #cda869' : '2px solid transparent',
                                 color: currentView === 'skills' ? '#cda869' : '#888',
-                                fontSize: '1.1rem',
+                                fontSize: '1.3rem',
                                 cursor: 'pointer',
                                 padding: '5px 0',
                                 flexShrink: 0
@@ -141,7 +186,7 @@ const SkyrimLayout = () => {
                                 border: 'none',
                                 borderBottom: currentView === 'sidequests' ? '2px solid #cda869' : '2px solid transparent',
                                 color: currentView === 'sidequests' ? '#cda869' : '#888',
-                                fontSize: '1.1rem',
+                                fontSize: '1.3rem',
                                 cursor: 'pointer',
                                 padding: '5px 0',
                                 flexShrink: 0

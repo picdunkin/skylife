@@ -1,7 +1,7 @@
 import { getMonday, getTodayISO } from '../utils/dateUtils';
 import { calculateXpGain, calculateLevelUp, calculateMoneyReward } from '../utils/gameRules';
 
-export const useSkills = (gameState, saveState, playSound) => {
+export const useSkills = (gameState, saveState, playSound, triggerFloatingText) => {
 
     const addSkill = (skill) => {
         const newSkills = [...(gameState.skills || []), {
@@ -26,7 +26,7 @@ export const useSkills = (gameState, saveState, playSound) => {
         saveState({ ...gameState, skills: newSkills });
     };
 
-    const checkInSkill = (skillId) => {
+    const checkInSkill = (skillId, event) => {
         const skill = (gameState.skills || []).find(s => s.id === skillId);
         if (!skill) return;
 
@@ -51,10 +51,10 @@ export const useSkills = (gameState, saveState, playSound) => {
         // Calculate XP
         const { xpGained, multiplier } = calculateXpGain(skill, daysDone);
 
-        // Calculate Level Up
-        const { newXp, newLevel, leveledUp } = calculateLevelUp(skill.xp + xpGained, skill.level);
+        // Calculate Level Up (Skill)
+        const { newXp: newSkillXp, newLevel: newSkillLevel, leveledUp: skillLeveledUp } = calculateLevelUp(skill.xp + xpGained, skill.level);
 
-        if (leveledUp) {
+        if (skillLeveledUp) {
             playSound('levelUp');
         } else {
             playSound('checkbox');
@@ -63,20 +63,45 @@ export const useSkills = (gameState, saveState, playSound) => {
         // Calculate Money
         const moneyGained = calculateMoneyReward(multiplier);
 
+        // Calculate Global Level Up
+        // "XP for checkin should also be added to global level"
+        const { newXp: newGlobalXp, newLevel: newGlobalLevel, leveledUp: globalLeveledUp } = calculateLevelUp((gameState.globalXP || 0) + xpGained, (gameState.globalLevel || 1));
+
+        if (globalLeveledUp) {
+            // If both level up, play sound again or rely on the first one?
+            // Usually one sound is enough, but maybe a notification.
+            // GameContext handles global level up notification if we used addGlobalXP, but here we calculate manually to batch updates.
+            // Let's just play sound if skill didn't level up, to avoid double sound.
+            if (!skillLeveledUp) playSound('levelUp');
+        }
+
         const newHistory = [...(skill.history || []), { date: new Date().toISOString(), xp: xpGained }];
 
         const newSkills = gameState.skills.map(s =>
             s.id === skillId ? {
                 ...s,
-                xp: newXp,
-                level: newLevel,
+                xp: newSkillXp,
+                level: newSkillLevel,
                 history: newHistory
             } : s
         );
 
         const newMoney = (gameState.money || 0) + moneyGained;
 
-        saveState({ ...gameState, skills: newSkills, money: newMoney });
+        saveState({
+            ...gameState,
+            skills: newSkills,
+            money: newMoney,
+            globalXP: newGlobalXp,
+            globalLevel: newGlobalLevel
+        });
+
+        if (event && triggerFloatingText) {
+            triggerFloatingText(event.clientX, event.clientY, `+${xpGained} XP`, '#4caf50');
+            setTimeout(() => {
+                triggerFloatingText(event.clientX, event.clientY - 30, `+${moneyGained} 🪙`, '#cda869');
+            }, 200);
+        }
     };
 
     return {

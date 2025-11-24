@@ -8,6 +8,8 @@ import { useQuests } from '../hooks/useQuests';
 import { useSkills } from '../hooks/useSkills';
 import { useSidequests } from '../hooks/useSidequests';
 import { useNotification } from './NotificationContext';
+import { calculateLevelUp, calculateGlobalReward, calculateXpToNextLevel } from '../utils/gameRules';
+import FloatingText from '../components/FloatingText';
 
 const GameContext = createContext();
 
@@ -22,7 +24,9 @@ const INITIAL_STATE = {
     acts: ACTS, // Now storing acts in state
     skills: [], // { id, title, targetPerWeek, level, xp, history: [{date, count}] }
     sidequests: [], // { id, title, completed, createdAt }
-    money: 0 // Septims
+    money: 0, // Septims
+    globalLevel: 1,
+    globalXP: 0
 };
 
 export const GameProvider = ({ children }) => {
@@ -32,6 +36,7 @@ export const GameProvider = ({ children }) => {
     const [gameState, setGameState] = useState(INITIAL_STATE);
     const [dataLoading, setDataLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
+    const [floatingTexts, setFloatingTexts] = useState([]); // { id, x, y, text, color }
 
     // Firestore Sync
     useEffect(() => {
@@ -79,9 +84,30 @@ export const GameProvider = ({ children }) => {
     };
 
     // Hooks for logic
-    const questLogic = useQuests(gameState, saveState, playSound);
-    const skillLogic = useSkills(gameState, saveState, playSound);
-    const sidequestLogic = useSidequests(gameState, saveState, playSound);
+
+    const triggerFloatingText = (x, y, text, color = '#cda869') => {
+        const id = Date.now() + Math.random();
+        setFloatingTexts(prev => [...prev, { id, x, y, text, color }]);
+    };
+
+    const removeFloatingText = (id) => {
+        setFloatingTexts(prev => prev.filter(ft => ft.id !== id));
+    };
+
+    const addGlobalXP = (amount) => {
+        const { newXp, newLevel, leveledUp } = calculateLevelUp(gameState.globalXP + amount, gameState.globalLevel);
+
+        if (leveledUp) {
+            playSound('levelUp');
+            showNotification(`Уровень повышен! Теперь вы уровень ${newLevel}`, 'success');
+        }
+
+        return { newXp, newLevel };
+    };
+
+    const questLogic = useQuests(gameState, saveState, playSound, triggerFloatingText);
+    const skillLogic = useSkills(gameState, saveState, playSound, triggerFloatingText);
+    const sidequestLogic = useSidequests(gameState, saveState, playSound, triggerFloatingText);
 
     const login = async () => {
         try {
@@ -105,17 +131,73 @@ export const GameProvider = ({ children }) => {
         }
     };
 
-    // Actions that didn't fit into hooks yet (Metrics, Objectives, EditMode)
-    const updateMetric = (metricId, value) => {
+    const updateMetric = (metricId, value, event) => {
         playSound('metricsChange');
         const newMetrics = { ...gameState.metrics, [metricId]: value };
-        saveState({ ...gameState, metrics: newMetrics });
+
+        // Calculate Reward
+        const { xp, money } = calculateGlobalReward('METRIC');
+
+        // Update Global State
+        const { newXp, newLevel } = addGlobalXP(xp);
+        const newMoney = (gameState.money || 0) + money;
+
+        saveState({
+            ...gameState,
+            metrics: newMetrics,
+            globalXP: newXp,
+            globalLevel: newLevel,
+            money: newMoney
+        });
+
+        // Trigger Visual Feedback
+        if (event) {
+            triggerFloatingText(event.clientX, event.clientY, `+${xp} XP`, '#4caf50');
+            setTimeout(() => {
+                triggerFloatingText(event.clientX, event.clientY - 30, `+${money} 🪙`, '#cda869');
+            }, 200);
+        }
     };
 
-    const toggleObjective = (objectiveId) => {
+    const toggleObjective = (objectiveId, event) => {
         const current = gameState.objectives[objectiveId] || false;
         const newObjectives = { ...gameState.objectives, [objectiveId]: !current };
-        saveState({ ...gameState, objectives: newObjectives });
+
+        let newGlobalXp = gameState.globalXP || 0;
+        let newGlobalLevel = gameState.globalLevel || 1;
+        let newMoney = gameState.money || 0;
+
+        if (!current) { // If checking
+            // Calculate Reward
+            const { xp, money } = calculateGlobalReward('CHECKBOX');
+
+            // Calculate Level Up
+            const { newXp, newLevel, leveledUp } = calculateLevelUp(newGlobalXp + xp, newGlobalLevel);
+
+            if (leveledUp) {
+                playSound('levelUp');
+                showNotification(`Уровень повышен! Теперь вы уровень ${newLevel}`, 'success');
+            }
+
+            newGlobalXp = newXp;
+            newGlobalLevel = newLevel;
+            newMoney += money;
+
+            if (event) {
+                triggerFloatingText(event.clientX, event.clientY, `+${xp} XP`, '#4caf50');
+                setTimeout(() => {
+                    triggerFloatingText(event.clientX, event.clientY - 30, `+${money} 🪙`, '#cda869');
+                }, 200);
+            }
+        }
+
+        saveState({
+            ...gameState,
+            objectives: newObjectives,
+            globalXP: newGlobalXp,
+            globalLevel: newGlobalLevel,
+            money: newMoney
+        });
     };
 
     const toggleEditMode = () => {
@@ -134,6 +216,8 @@ export const GameProvider = ({ children }) => {
         updateMetric,
         toggleObjective,
         toggleEditMode,
+        triggerFloatingText,
+        addGlobalXP,
         ...questLogic,
         ...skillLogic,
         ...sidequestLogic
@@ -142,6 +226,16 @@ export const GameProvider = ({ children }) => {
     return (
         <GameContext.Provider value={value}>
             {children}
+            {floatingTexts.map(ft => (
+                <FloatingText
+                    key={ft.id}
+                    x={ft.x}
+                    y={ft.y}
+                    text={ft.text}
+                    color={ft.color}
+                    onComplete={() => removeFloatingText(ft.id)}
+                />
+            ))}
         </GameContext.Provider>
     );
 };

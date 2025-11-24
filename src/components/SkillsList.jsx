@@ -65,7 +65,7 @@ const SkillsList = ({ onSelect, selectedId, onEditSkill }) => {
                         }}
                     >
                         <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>
                                 {skill.title}
                             </div>
                             <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>

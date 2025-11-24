@@ -3,20 +3,20 @@ import React, { useState } from 'react';
 const MetricInput = ({ metric, currentValue, onUpdate, disabled = false }) => {
     const [inputValue, setInputValue] = useState('1');
 
-    const handleAdd = () => {
+    const handleAdd = (e) => {
         if (disabled) return;
         const val = parseInt(inputValue, 10);
         if (!isNaN(val)) {
-            onUpdate(currentValue + val);
+            onUpdate(currentValue + val, e);
             setInputValue('1');
         }
     };
 
-    const handleSet = () => {
+    const handleSet = (e) => {
         if (disabled) return;
         const val = parseInt(inputValue, 10);
         if (!isNaN(val)) {
-            onUpdate(val);
+            onUpdate(val, e);
             setInputValue('1');
         }
     };

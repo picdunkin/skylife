@@ -72,10 +72,10 @@ const QuestDetail = ({ questId, onBack }) => {
                         <div
                             key={obj.id}
                             className="objective-item"
-                            onClick={() => {
+                            onClick={(e) => {
                                 if (actUnlocked) {
                                     playSound('checkbox');
-                                    toggleObjective(obj.id);
+                                    toggleObjective(obj.id, e);
                                 }
                             }}
                             style={{
@@ -115,7 +115,7 @@ const QuestDetail = ({ questId, onBack }) => {
                                 key={metric.id}
                                 metric={metric}
                                 currentValue={gameState.metrics[metric.id] || 0}
-                                onUpdate={(val) => actUnlocked && updateMetric(metric.id, val)}
+                                onUpdate={(val, e) => actUnlocked && updateMetric(metric.id, val, e)}
                                 disabled={!actUnlocked}
                             />
                         ))}
@@ -137,7 +137,7 @@ const QuestDetail = ({ questId, onBack }) => {
             <div className="actions-section">
                 {!isCompleted ? (
                     <button
-                        onClick={() => actUnlocked && completeQuest(questId)}
+                        onClick={(e) => actUnlocked && completeQuest(questId, e)}
                         disabled={!actUnlocked}
                         style={{
                             width: '100%',
