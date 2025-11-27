@@ -1,6 +1,80 @@
-# Skylife - Gamification Dashboard
+# SkyLife - Gamified Life Management
 
-Skyrim-themed personal quest tracker with Firebase integration.
+A Skyrim-themed gamification app for personal productivity and life management.
+
+## Architecture
+
+Monorepo with microservices architecture:
+
+```
+skylife/
+├── frontend/          # React + Vite
+├── services/
+│   ├── gateway/       # Nginx API Gateway
+│   ├── auth/          # Laravel - Google OAuth
+│   ├── quests/        # Laravel - Quests & Acts
+│   ├── skills/        # Laravel - Skills & Checkins
+│   ├── users/         # Laravel - User profiles & levels
+│   └── ai/            # Laravel - AI characters & dialogues
+└── shared/
+    └── api-specs/     # OpenAPI specifications
+```
+
+## Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 20+ (for local frontend development)
+
+### Development
+
+1. Copy environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your values
+```
+
+2. Start all services:
+```bash
+docker-compose up -d
+```
+
+3. Access:
+   - Frontend: http://localhost:3000
+   - API Gateway: http://localhost:8080
+   - MySQL: localhost:3306
+   - Redis: localhost:6379
+
+### Frontend Only (without Docker)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Creating Laravel Services
+
+Each service needs to be initialized with Laravel:
+
+```bash
+# Example for auth service
+cd services/auth
+composer create-project laravel/laravel . --prefer-dist
+```
+
+## Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| frontend | 3000 | React SPA |
+| gateway | 8080 | API Gateway (Nginx) |
+| auth | - | Authentication (Google OAuth) |
+| quests | - | Quests, Acts, Sidequests |
+| skills | - | Skills, Checkins, Levels |
+| users | - | User profiles, XP, Septims |
+| ai | - | AI characters, Dialogues |
+| mysql | 3306 | Database |
+| redis | 6379 | Cache & Sessions |
 
 ## Features!!!
 

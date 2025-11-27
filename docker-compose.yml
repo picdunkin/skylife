@@ -1,0 +1,120 @@
+services:
+  # === FRONTEND ===
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:80"
+    depends_on:
+      - gateway
+    networks:
+      - skylife-network
+
+  # === API GATEWAY ===
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./services/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth
+      - quests
+      - skills
+      - users
+      - ai
+    networks:
+      - skylife-network
+
+  # === AUTH SERVICE ===
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    environment:
+      - APP_NAME=SkyLife Auth
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FIREBASE_CREDENTIALS=/app/firebase-credentials.json
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    networks:
+      - skylife-network
+
+  # === QUESTS SERVICE ===
+  quests:
+    build:
+      context: ./services/quests
+      dockerfile: Dockerfile
+    environment:
+      - APP_NAME=SkyLife Quests
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - FIREBASE_CREDENTIALS=/app/firebase-credentials.json
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    networks:
+      - skylife-network
+
+  # === SKILLS SERVICE ===
+  skills:
+    build:
+      context: ./services/skills
+      dockerfile: Dockerfile
+    environment:
+      - APP_NAME=SkyLife Skills
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - FIREBASE_CREDENTIALS=/app/firebase-credentials.json
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    networks:
+      - skylife-network
+
+  # === USERS SERVICE ===
+  users:
+    build:
+      context: ./services/users
+      dockerfile: Dockerfile
+    environment:
+      - APP_NAME=SkyLife Users
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - FIREBASE_CREDENTIALS=/app/firebase-credentials.json
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    networks:
+      - skylife-network
+
+  # === AI SERVICE ===
+  ai:
+    build:
+      context: ./services/ai
+      dockerfile: Dockerfile
+    environment:
+      - APP_NAME=SkyLife AI
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - FIREBASE_CREDENTIALS=/app/firebase-credentials.json
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    networks:
+      - skylife-network
+
+networks:
+  skylife-network:
+    driver: bridge

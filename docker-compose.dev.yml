@@ -1,0 +1,46 @@
+# Development overrides - use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  # Frontend with hot reload
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3002:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+
+  # Laravel services with volume mounts for development
+  auth:
+    volumes:
+      - ./services/auth:/app
+    environment:
+      - APP_DEBUG=true
+
+  quests:
+    volumes:
+      - ./services/quests:/app
+    environment:
+      - APP_DEBUG=true
+
+  skills:
+    volumes:
+      - ./services/skills:/app
+    environment:
+      - APP_DEBUG=true
+
+  users:
+    volumes:
+      - ./services/users:/app
+    environment:
+      - APP_DEBUG=true
+
+  ai:
+    volumes:
+      - ./services/ai:/app
+    environment:
+      - APP_DEBUG=true
